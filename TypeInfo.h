@@ -12,4 +12,10 @@ typedef struct
     BinaryOperator multiply;
     BinaryOperator scalar_multiply;
     void (*print)(const void *);
+    void *(*create)(void);
+    void (*copy)(void *dest, const void *src);
+    void (*free)(void *value);
 } TypeInfo;
+
+const TypeInfo *get_int_type_info(void);
+const TypeInfo *get_double_type_info(void);
