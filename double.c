@@ -1,4 +1,5 @@
 #include "double.h"
+#include "TypeInfo.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -53,4 +54,19 @@ void dbl_print(const void *value)
 void dbl_free(void *value)
 {
     free(value);
+}
+
+static TypeInfo double_type_info = {
+    .size = sizeof(double),
+    .add = dbl_add,
+    .multiply = dbl_multi,
+    .scalar_multiply = dbl_scalar_multi,
+    .print = dbl_print,
+    .create = dbl_create,
+    .copy = dbl_copy,
+    .free = dbl_free};
+
+const TypeInfo *get_double_type_info(void)
+{
+    return &double_type_info;
 }
