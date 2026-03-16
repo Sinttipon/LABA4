@@ -16,6 +16,3 @@ typedef struct
     void (*copy)(void *dest, const void *src);
     void (*free)(void *value);
 } TypeInfo;
-
-const TypeInfo *get_int_type_info(void);
-const TypeInfo *get_double_type_info(void);
