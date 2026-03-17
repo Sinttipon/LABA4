@@ -2,7 +2,7 @@
 #include "TypeInfo.h"
 typedef struct
 {
-    void** coef;          
+    void* coeffs;          
     size_t degree;            
     const TypeInfo *type_info; 
 } Polynom;
@@ -11,6 +11,7 @@ typedef struct
 Polynom *create_poly(const TypeInfo *type_info, size_t degree);
 void delete_poly(Polynom *poly);
 void poly_print(const Polynom *poly);
+char *poly_to_string(const Polynom *poly);
 
 Polynom *add_poly(const Polynom *a, const Polynom *b);
 Polynom *mul_poly(const Polynom *a, const Polynom *b);

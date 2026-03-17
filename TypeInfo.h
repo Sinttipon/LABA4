@@ -15,4 +15,5 @@ typedef struct
     void *(*create)(void);
     void (*copy)(void *dest, const void *src);
     void (*free)(void *value);
+    void (*scan)(void *value);
 } TypeInfo;

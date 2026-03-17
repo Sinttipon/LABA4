@@ -1,8 +1,7 @@
 #include "double.h"
-#include "TypeInfo.h"
-#include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
+
+static TypeInfo *DBL_TYPE_INFO = NULL;
 
 void *dbl_create(void)
 {
@@ -43,6 +42,22 @@ void dbl_scalar_multi(void *result, const void *first, const void *second)
     dbl_multi(result, first, second);
 }
 
+static void dbl_scan(void *value)
+{
+    if (!value)
+        return;
+    while (1)
+    {
+        if (scanf("%lf", (double *)value) == 1)
+        {
+            std_clear();
+            return;
+        }
+        printf("Ошибка ввода вещественного числа. Повторите: ");
+        std_clear();
+    }
+}
+
 void dbl_print(const void *value)
 {
     if (value)
@@ -56,17 +71,23 @@ void dbl_free(void *value)
     free(value);
 }
 
-static TypeInfo double_type_info = {
-    .size = sizeof(double),
-    .add = dbl_add,
-    .multiply = dbl_multi,
-    .scalar_multiply = dbl_scalar_multi,
-    .print = dbl_print,
-    .create = dbl_create,
-    .copy = dbl_copy,
-    .free = dbl_free};
-
 const TypeInfo *get_double_type_info(void)
 {
-    return &double_type_info;
+    if (DBL_TYPE_INFO == NULL)
+    {
+        DBL_TYPE_INFO = (TypeInfo *)malloc(sizeof(TypeInfo));
+        if (DBL_TYPE_INFO)
+        {
+            DBL_TYPE_INFO->size = sizeof(double);
+            DBL_TYPE_INFO->add = dbl_add;
+            DBL_TYPE_INFO->multiply = dbl_multi;
+            DBL_TYPE_INFO->scalar_multiply = dbl_scalar_multi;
+            DBL_TYPE_INFO->print = dbl_print;
+            DBL_TYPE_INFO->scan = dbl_scan;
+            DBL_TYPE_INFO->create = dbl_create;
+            DBL_TYPE_INFO->copy = dbl_copy;
+            DBL_TYPE_INFO->free = dbl_free;
+        }
+    }
+    return DBL_TYPE_INFO;
 }

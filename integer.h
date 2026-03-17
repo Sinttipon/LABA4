@@ -1,3 +1,8 @@
+#pragma once
+#include "TypeInfo.h"
+
+const TypeInfo *get_int_type_info(void);
+
 void* int_create(void);
 
 void int_copy(void *dest, const void *src);

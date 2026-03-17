@@ -1,7 +1,13 @@
 #include "integer.h"
-#include "TypeInfo.h"
-#include <stdlib.h>
 #include <stdio.h>
+
+static TypeInfo *INT_TYPE_INFO=NULL;
+
+static void std_clear()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
 
 void *int_create(void)
 {
@@ -29,6 +35,14 @@ void int_add(void *result, const void *first, const void *second)
     }
 }
 
+void int_sub(void *result, const void *first, const void *second)
+{
+    if (result && first && second)
+    {
+        *(int *)result = *(const int *)first - *(const int *)second;
+    }
+}
+
 void int_multi(void *result, const void *first, const void *second)
 {
     if (result && first && second)
@@ -49,23 +63,44 @@ void int_print(const void *value)
         printf("%d", *(const int *)value);
     }
 }
+void int_scan(void *value)
+{
+    if (!value)
+        return;
+    while (1)
+    {
+        if (scanf("%d", (int *)value) == 1)
+        {
+            std_clear();
+            return;
+        }
+        printf("Ошибка ввода числа. Повторите: ");
+        std_clear();
+    }
+}
 
 void int_free(void *value)
 {
     free(value);
 }
 
-static TypeInfo int_type_info = {
-    .size = sizeof(double),
-    .add = int_add,
-    .multiply = int_multi,
-    .scalar_multiply = int_scalar_multi,
-    .print = int_print,
-    .create = int_create,
-    .copy = int_copy,
-    .free = int_free};
-
-const TypeInfo *get_double_type_info(void)
+const TypeInfo *get_int_type_info(void)
 {
-    return &int_type_info;
+    if (INT_TYPE_INFO == NULL)
+    {
+        INT_TYPE_INFO = (TypeInfo *)malloc(sizeof(TypeInfo));
+        if (INT_TYPE_INFO)
+        {
+            INT_TYPE_INFO->size = sizeof(int); 
+            INT_TYPE_INFO->add = int_add;
+            INT_TYPE_INFO->multiply = int_multi;
+            INT_TYPE_INFO->scalar_multiply = int_scalar_multi;
+            INT_TYPE_INFO->print = int_print;
+            INT_TYPE_INFO->scan = int_scan; 
+            INT_TYPE_INFO->create = int_create;
+            INT_TYPE_INFO->copy = int_copy;
+            INT_TYPE_INFO->free = int_free;
+        }
+    }
+    return INT_TYPE_INFO;
 }

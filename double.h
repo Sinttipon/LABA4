@@ -1,3 +1,8 @@
+#pragma once
+#include "TypeInfo.h"
+
+const TypeInfo *get_double_type_info(void);
+
 void* dbl_create(void);
 
 void dbl_copy(void *dest, const void *src);
