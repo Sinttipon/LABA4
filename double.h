@@ -1,5 +1,6 @@
 #pragma once
 #include "TypeInfo.h"
+#include "utilits.h"
 
 const TypeInfo *get_double_type_info(void);
 
@@ -17,6 +18,6 @@ void dbl_print(const void *value);
 
 void dbl_free(void *value);
 
-static void dbl_scan(void *value);
+void dbl_scan(void *value);
 
 void dbl_sub(void *result, const void *first, const void *second);

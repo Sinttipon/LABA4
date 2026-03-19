@@ -1,13 +1,9 @@
 #include "integer.h"
+#include "utilits.h"
 #include <stdio.h>
 
 static TypeInfo *INT_TYPE_INFO=NULL;
 
-static void std_clear()
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
 
 void *int_create(void)
 {
@@ -63,6 +59,7 @@ void int_print(const void *value)
         printf("%d", *(const int *)value);
     }
 }
+
 void int_scan(void *value)
 {
     if (!value)

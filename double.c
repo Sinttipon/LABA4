@@ -1,14 +1,9 @@
 #include "double.h"
 #include <stdio.h>
+#include "utilits.h"
 
 static TypeInfo *DBL_TYPE_INFO = NULL;
 
-static void std_clear()
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF)
-        ;
-}
 
 void *dbl_create(void)
 {
@@ -57,7 +52,7 @@ void dbl_scalar_multi(void *result, const void *first, const void *second)
     dbl_multi(result, first, second);
 }
 
-static void dbl_scan(void *value)
+void dbl_scan(void *value)
 {
     if (!value)
         return;

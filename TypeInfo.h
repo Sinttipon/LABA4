@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef void (*BinaryOperator)(const void *arg1, const void *arg2, void *result);
+typedef void (*BinaryOperator)(void *result, const void *arg1,const void *arg2);
 
 typedef struct
 {

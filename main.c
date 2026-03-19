@@ -5,15 +5,12 @@
 #include "integer.h"
 #include "double.h"
 #include "prosessing.h"
-
-void clear_stdin()
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
+#include "utilits.h"
+#include <windows.h>
 
 int main()
 {
+    SetConsoleOutputCP(CP_UTF8);
     int type_choice;
     const TypeInfo *type = NULL;
 
@@ -26,7 +23,7 @@ int main()
         }
 
         printf("Некорректный ввод. Пожалуйста, введите 1 или 2.\n");
-        clear_stdin(); 
+        std_clear(); 
     }
 
      if (type_choice == 1)
@@ -71,17 +68,39 @@ int main()
         if (choice == 0)
         {
             break;
-
+        }
         if (choice == 1 || choice == 2)
         {
             char buffer[256];
-            printf("Enter polynomial: ");
-            if (!fgets(buffer, sizeof(buffer), stdin))
-                continue;
-            buffer[strcspn(buffer, "\n")] = 0;
+            Polynom *p = NULL;
+            int success = 0; 
 
-            Polynom *p = parse_polynomial(buffer, type);
-            if (p)
+            while (!success)
+            {
+                std_clear();
+
+                printf("Введите многочлен: ");
+
+                if (fgets(buffer, sizeof(buffer), stdin) == NULL)
+                {
+                    break;
+                }
+
+                buffer[strcspn(buffer, "\n")] = 0;
+
+                p = parse_polynomial(buffer, type);
+
+                if (p != NULL)
+                {
+                    success = 1;
+                }
+                else
+                {
+                    printf("Невозможность парсинга. Попробуйте еще раз.\n");
+                }
+            }
+
+            if (success && p != NULL)
             {
                 if (choice == 1)
                 {
@@ -95,13 +114,10 @@ int main()
                         delete_poly(p2);
                     p2 = p;
                 }
-                printf("Polynomial created successfully.\n");
-            }
-            else
-            {
-                printf("Невозможность парсинга\n");
+                printf("Многочлен принят.\n");
             }
         }
+
         else if (choice >= 3 && choice <= 7)
         {
             if (!p1 || !p2)
@@ -176,5 +192,4 @@ int main()
     if (p2)
         delete_poly(p2);
     return 0;
-}
 }

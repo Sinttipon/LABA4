@@ -6,20 +6,15 @@
 
 #define GET_COEF_PTR(poly, index) ((char *)(poly)->coeffs + (index) * (poly)->type_info->size)
 
-static void *create_zero(const TypeInfo *info)
-{
-    return info->create();
-}
-
 Polynom *create_poly(const TypeInfo *type_info, size_t degree)
 {
     if (!type_info)
-        return create_poly_error;
+        return NULL;
 
     Polynom *poly = (Polynom *)malloc(sizeof(Polynom));
 
     if (!poly)
-        return memory_allocation_failed;
+        return NULL;
 
     poly->degree = degree;
     poly->type_info = type_info;
@@ -111,7 +106,7 @@ Polynom *add_poly(const Polynom *a, const Polynom *b)
             val_b = GET_COEF_PTR(b, i);
         }
 
-        a->type_info->add(val_a, val_b, GET_COEF_PTR(res, i));
+        a->type_info->add(GET_COEF_PTR(res, i), val_a, val_b);
     }
     a->type_info->free(zero);
 
@@ -130,7 +125,7 @@ Polynom *scalar_mul_poly(const Polynom *poly, const void *scalar)
     size_t i;
     for (i = 0; i <= poly->degree; i++)
     {
-        poly->type_info->scalar_multiply(GET_COEF_PTR(poly, i), scalar, GET_COEF_PTR(res, i));
+        poly->type_info->scalar_multiply(GET_COEF_PTR(res, i), GET_COEF_PTR(poly, i), scalar);
     }
     return res;
 }
@@ -189,7 +184,7 @@ Polynom *mul_poly(const Polynom *a, const Polynom *b)
     {
         for (j = 0; j <= b->degree; j++)
         {
-            a->type_info->multiply(GET_COEF_PTR(a, i), GET_COEF_PTR(b, j), temp_prod);
+            a->type_info->multiply(temp_prod, GET_COEF_PTR(a, i), GET_COEF_PTR(b, j));
             a->type_info->add(GET_COEF_PTR(res, i + j), temp_prod, GET_COEF_PTR(res, i + j));
             a->type_info->copy(temp_prod, zero);
         }
