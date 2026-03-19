@@ -93,6 +93,7 @@ const TypeInfo *get_int_type_info(void)
         {
             INT_TYPE_INFO->size = sizeof(int); 
             INT_TYPE_INFO->add = int_add;
+            INT_TYPE_INFO->sub = int_sub;
             INT_TYPE_INFO->multiply = int_multi;
             INT_TYPE_INFO->scalar_multiply = int_scalar_multi;
             INT_TYPE_INFO->print = int_print;

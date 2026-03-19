@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "PolynomErrors.h"
+#include "polynom.h"
 
 int is_number(int c)
 {
@@ -172,4 +173,99 @@ void sort_degrees(int *degrees, int count)
             }
         }
     }
+}
+
+Polynom *parse_polynomial(const char *str, const TypeInfo *type)
+{
+    if (!str || !type)
+        return NULL;
+
+    int max_deg = get_max_degree(str);
+    if (max_deg < 0)
+        return NULL; 
+
+    Polynom *poly = create_poly(type, max_deg);
+    if (!poly)
+        return NULL;
+    const char *ptr = str;
+    while (*ptr != '\0')
+    {
+        while (*ptr == ' ')
+            ptr++;
+        if (*ptr == '\0')
+            break;
+
+        int sign = 1;
+        if (*ptr == '+')
+            ptr++;
+        else if (*ptr == '-')
+        {
+            sign = -1;
+            ptr++;
+        }
+
+        double coef_val = 0.0;
+        int has_coef = 0;
+        if (is_number(*ptr) || *ptr == '.')
+        {
+            char *end;
+            coef_val = strtod(ptr, &end);
+            if (end != ptr)
+            {
+                has_coef = 1;
+                ptr = end;
+            }
+        }
+
+        while (*ptr == ' ')
+            ptr++;
+
+        int degree = 0;
+        if (*ptr == 'x' || *ptr == 'X')
+        {
+            ptr++;
+            while (*ptr == ' ')
+                ptr++;
+            if (*ptr == '^')
+            {
+                ptr++;
+                while (*ptr == ' ')
+                    ptr++;
+                if (is_number(*ptr))
+                {
+                    char *end;
+                    long d = strtol(ptr, &end, 10);
+                    degree = (int)d;
+                    ptr = end;
+                }
+            }
+            else
+            {
+                degree = 1;
+            }
+        }
+        else
+        {
+            if (!has_coef)
+            {
+                break;
+            }
+            degree = 0;
+        }
+
+        if (!has_coef)
+            coef_val = 1.0; 
+        coef_val *= sign;
+
+        void *temp = type->create();
+        if (type->size == sizeof(int))
+            *(int *)temp = (int)coef_val;
+        else if (type->size == sizeof(double))
+            *(double *)temp = coef_val;
+
+        poly_set_coef(poly, degree, temp);
+        type->free(temp);
+    }
+
+    return poly;
 }

@@ -9,6 +9,7 @@ typedef struct
 {
     size_t size;
     BinaryOperator add;
+    BinaryOperator sub;
     BinaryOperator multiply;
     BinaryOperator scalar_multiply;
     void (*print)(const void *);

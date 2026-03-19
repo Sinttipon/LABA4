@@ -16,3 +16,7 @@ void dbl_scalar_multi(void *result, const void *first, const void *second);
 void dbl_print(const void *value);
 
 void dbl_free(void *value);
+
+static void dbl_scan(void *value);
+
+void dbl_sub(void *result, const void *first, const void *second);

@@ -16,3 +16,7 @@ void int_scalar_multi(void *result, const void *first, const void *second);
 void int_print(const void *value);
 
 void int_free(void *value);
+
+void int_sub(void *result, const void *first, const void *second);
+
+void int_scan(void *value);
