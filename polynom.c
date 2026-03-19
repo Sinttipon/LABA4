@@ -285,7 +285,7 @@ void poly_print(const Polynom *poly)
 {
     if (!poly)
     {
-        printf("NULL polynomial\n");
+        printf("NULL многочлен\n");
         return;
     }
 
@@ -297,7 +297,6 @@ void poly_print(const Polynom *poly)
     {
         void *coef = GET_COEF_PTR(poly, i);
 
-        // Проверка на ноль
         int is_zero = 0;
         if (poly->type_info->size == sizeof(int))
         {

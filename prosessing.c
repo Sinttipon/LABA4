@@ -181,7 +181,6 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
     if (!str || !type)
         return NULL;
 
-    // 1. Сначала проверяем, есть ли в строке хоть что-то полезное
     int has_valid_term = 0;
     const char *check_ptr = str;
     while (*check_ptr != '\0')
@@ -194,10 +193,9 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
         check_ptr++;
     }
 
-    // Если нет ни цифр, ни 'x' - это мусор (например "ef", "abc")
     if (!has_valid_term)
     {
-        printf("Ошибка: в строке нет чисел или переменной x.\n");
+        printf("В строке нет чисел или переменной x.\n");
         return NULL;
     }
 
@@ -244,7 +242,7 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
                 double int_part;
                 if (modf(coef_val, &int_part) != 0.0)
                 {
-                    printf("Ошибка: введен тип double (%.4g) для типа int.\n", coef_val);
+                    printf("Введен тип double (%.4g) для типа int.\n", coef_val);
                     delete_poly(poly);
                     return NULL;
                 }
@@ -279,7 +277,7 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
                     long d = strtol(ptr, &end, 10);
                     if (d < 0 || d > 1000000)
                     {
-                        printf("Ошибка: степень %ld слишком большая.\n", d);
+                        printf("Степень %ld слишком большая.\n", d);
                         delete_poly(poly);
                         return NULL;
                     }
