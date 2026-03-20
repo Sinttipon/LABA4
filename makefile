@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -g -std=c99
 TARGET_MAIN = main.exe
 TARGET_TESTS = tests.exe
 
-SRC_COMMON = polynom.c integer.c double.c prosessing.c utilits.c
+SRC_COMMON = polynom.c integer.c double.c prosessing.c utilits.c runmain.c
 SRC_MAIN = main.c
 SRC_TESTS = tests.c
 
