@@ -7,7 +7,8 @@ typedef enum{
     create_poly_error=400,
     get_coef_error=500,
     type_error=600,
-    operation_failed=700,
+    degree_error=700,
+    operation_failed=800,
     ok = 0,
     memory_allocation_failed = 1000 ,
     

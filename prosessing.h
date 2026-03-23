@@ -11,4 +11,4 @@ int get_max_degree(const char *str);
 
 void sort_degrees(int *degrees, int count);
 
-Polynom *parse_polynomial(const char *str, const TypeInfo *type);
+Polynom *parse_polynomial(const char *str, const TypeInfo *type, PolyErrors *err);

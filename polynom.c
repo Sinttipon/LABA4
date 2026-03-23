@@ -6,22 +6,36 @@
 
 #define GET_COEF_PTR(poly, index) ((char *)(poly)->coeffs + (index) * (poly)->type_info->size)
 
-Polynom *create_poly(const TypeInfo *type_info, size_t degree)
+Polynom *create_poly(const TypeInfo *type_info, size_t degree, PolyErrors *err)
 {
+    if (err)
+        *err = ok;
+
     if (!type_info)
+    {
+        if (err)
+            *err = null_error;
         return NULL;
+    }
 
     Polynom *poly = (Polynom *)malloc(sizeof(Polynom));
 
     if (!poly)
+    {
+        if (err)
+            *err = memory_allocation_failed;
         return NULL;
+    }
 
     poly->degree = degree;
     poly->type_info = type_info;
     poly->coeffs = calloc(degree + 1, type_info->size);
+
     if (!poly->coeffs)
     {
         free(poly);
+        if (err)
+            *err = memory_allocation_failed;
         return NULL;
     }
 
@@ -35,6 +49,9 @@ Polynom *create_poly(const TypeInfo *type_info, size_t degree)
         }
         type_info->free(zero);
     }
+
+    if (err)
+        *err = ok;
     return poly;
 }
 
@@ -67,12 +84,12 @@ void poly_set_coef(Polynom *poly, size_t index, const void *value)
     poly->type_info->copy(GET_COEF_PTR(poly, index), value);
 }
 
-Polynom *add_poly(const Polynom *a, const Polynom *b)
+PolyErrors add_poly(const Polynom *a, const Polynom *b, Polynom *result)
 {
-    if (!a || !b || !a->type_info || !b->type_info)
-        return NULL;
-    if (a->type_info != b->type_info)
-        return NULL;
+    if (!a || !b || !result || !a->type_info || !b->type_info)
+        return null_error;
+    if (a->type_info != b->type_info || a->type_info != result->type_info)
+        return type_error;
 
     size_t deg_a = a->degree;
     size_t deg_b = b->degree;
@@ -86,58 +103,66 @@ Polynom *add_poly(const Polynom *a, const Polynom *b)
         max_deg = deg_b;
     }
 
-    Polynom *res = create_poly(a->type_info, max_deg);
-    if (!res)
-        return NULL;
+    if (result->degree != max_deg)
+        return degree_error;
 
     void *zero = a->type_info->create();
+
+    if (!zero)
+        return memory_allocation_failed;
+
     size_t i;
     for (i = 0; i <= max_deg; i++)
     {
-        const void *val_a = zero;
-        const void *val_b = zero;
+        const void *val_a;
+        const void *val_b;
+
         if (i <= a->degree)
         {
             val_a = GET_COEF_PTR(a, i);
+        }
+
+        else
+        {
+            val_a = zero;
         }
 
         if (i <= b->degree)
         {
             val_b = GET_COEF_PTR(b, i);
         }
-
-        a->type_info->add(GET_COEF_PTR(res, i), val_a, val_b);
+        else
+        {
+            val_b = zero;
+        }
+        a->type_info->add(GET_COEF_PTR(result, i), val_a, val_b);
     }
-    a->type_info->free(zero);
 
-    return res;
+    a->type_info->free(zero);
+    return ok;
 }
 
-Polynom *scalar_mul_poly(const Polynom *poly, const void *scalar)
+PolyErrors scalar_mul_poly(const Polynom *poly, const void *scalar, Polynom *result)
 {
-    if (!poly || !scalar || !poly->type_info)
-        return NULL;
-
-    Polynom *res = create_poly(poly->type_info, poly->degree);
-    if (!res)
-        return NULL;
+    if (!poly || !scalar || !result || !poly->type_info)
+        return null_error;
+    if (poly->type_info != result->type_info)
+        return type_error;
+    if (result->degree != poly->degree)
+        return degree_error;
 
     size_t i;
     for (i = 0; i <= poly->degree; i++)
     {
-        poly->type_info->scalar_multiply(GET_COEF_PTR(res, i), GET_COEF_PTR(poly, i), scalar);
+        poly->type_info->scalar_multiply(GET_COEF_PTR(result, i), GET_COEF_PTR(poly, i), scalar);
     }
-    return res;
+    return ok;
 }
 
-void *poly_eval(const Polynom *poly, const void *x)
+PolyErrors poly_eval(const Polynom *poly, const void *x, void *result)
 {
-    if (!poly || !x || !poly->type_info)
-        return NULL;
-
-    void *result = poly->type_info->create();
-    if (!result)
-        return NULL;
+    if (!poly || !x || !result || !poly->type_info)
+        return null_error;
 
     poly->type_info->copy(result, GET_COEF_PTR(poly, poly->degree));
 
@@ -149,22 +174,20 @@ void *poly_eval(const Polynom *poly, const void *x)
         i--;
     }
 
-    return result;
+    return ok;
 }
 
-Polynom *mul_poly(const Polynom *a, const Polynom *b)
+PolyErrors mul_poly(const Polynom *a, const Polynom *b, Polynom *result)
 {
-    if (!a || !b || !a->type_info || !b->type_info)
-        return NULL;
-
-    if (a->type_info != b->type_info)
-        return NULL;
+    if (!a || !b || !result || !a->type_info || !b->type_info)
+        return null_error;
+    if (a->type_info != b->type_info || a->type_info != result->type_info)
+        return type_error;
 
     size_t res_deg = a->degree + b->degree;
-    Polynom *res = create_poly(a->type_info, res_deg);
 
-    if (!res)
-        return NULL;
+    if (result->degree != res_deg)
+        return degree_error;
 
     void *temp_prod = a->type_info->create();
     void *zero = a->type_info->create();
@@ -175,8 +198,13 @@ Polynom *mul_poly(const Polynom *a, const Polynom *b)
             a->type_info->free(temp_prod);
         if (zero)
             a->type_info->free(zero);
-        delete_poly(res);
-        return NULL;
+        return memory_allocation_failed;
+    }
+
+    size_t k;
+    for (k = 0; k <= res_deg; k++)
+    {
+        a->type_info->copy(GET_COEF_PTR(result, k), zero);
     }
 
     size_t i, j;
@@ -185,100 +213,121 @@ Polynom *mul_poly(const Polynom *a, const Polynom *b)
         for (j = 0; j <= b->degree; j++)
         {
             a->type_info->multiply(temp_prod, GET_COEF_PTR(a, i), GET_COEF_PTR(b, j));
-            a->type_info->add(GET_COEF_PTR(res, i + j), temp_prod, GET_COEF_PTR(res, i + j));
+            a->type_info->add(GET_COEF_PTR(result, i + j), temp_prod, GET_COEF_PTR(result, i + j));
             a->type_info->copy(temp_prod, zero);
         }
     }
 
     a->type_info->free(temp_prod);
     a->type_info->free(zero);
-
-    return res;
+    return ok;
 }
 
-Polynom *compose_poly(const Polynom *p, const Polynom *q)
+PolyErrors compose_poly(const Polynom *a, const Polynom *b, Polynom *result)
 {
-    if (!p || !q || !p->type_info || !q->type_info)
-        return NULL;
-    if (p->type_info != q->type_info)
-        return NULL;
+    if (!a || !b || !result || !a->type_info || !b->type_info)
+        return null_error;
+    if (a->type_info != b->type_info || a->type_info != result->type_info)
+        return type_error;
 
-    size_t res_deg = p->degree * q->degree;
-    Polynom *res = create_poly(p->type_info, res_deg);
+    size_t res_deg = a->degree * b->degree;
+    if (result->degree != res_deg)
+        return degree_error;
 
-    if (!res)
-        return NULL;
+    void *zero_val = a->type_info->create();
+    if (!zero_val)
+        return memory_allocation_failed;
 
-    if (p->degree == 0)
+    size_t k;
+    for (k = 0; k <= res_deg; k++)
     {
-        p->type_info->copy(GET_COEF_PTR(res, 0), GET_COEF_PTR(p, 0));
-        return res;
+        a->type_info->copy(GET_COEF_PTR(result, k), zero_val);
     }
 
-    Polynom *current = create_poly(p->type_info, 0);
+    if (a->degree == 0)
+    {
+        a->type_info->copy(GET_COEF_PTR(result, 0), GET_COEF_PTR(a, 0));
+        a->type_info->free(zero_val);
+        return ok;
+    }
+
+
+    Polynom *current = create_poly(a->type_info, 0, NULL);
+
     if (!current)
     {
-        delete_poly(res);
-        return NULL;
+        a->type_info->free(zero_val);
+        return memory_allocation_failed;
     }
-    poly_set_coef(current, 0, GET_COEF_PTR(p, p->degree));
+    poly_set_coef(current, 0, GET_COEF_PTR(a, a->degree));
 
-    void *zero_coef = p->type_info->create();
-    int i = (int)p->degree - 1;
+    int i = (int)a->degree - 1;
     while (i >= 0)
     {
-        Polynom *next = mul_poly(current, q);
-        delete_poly(current);
+        size_t next_deg = current->degree + b->degree;
+        Polynom *next = create_poly(a->type_info, next_deg, NULL);
 
         if (!next)
         {
-            p->type_info->free(zero_coef);
-            delete_poly(res);
-            return NULL;
+            delete_poly(current);
+            a->type_info->free(zero_val);
+            return memory_allocation_failed;
+        }
+
+        PolyErrors err = mul_poly(current, b, next);
+        delete_poly(current);
+        if (err != ok)
+        {
+            delete_poly(next);
+            a->type_info->free(zero_val);
+            return err;
         }
         current = next;
 
-        Polynom *const_poly = create_poly(p->type_info, 0);
+        Polynom *const_poly = create_poly(a->type_info, 0, NULL);
         if (!const_poly)
         {
             delete_poly(current);
-            p->type_info->free(zero_coef);
-            delete_poly(res);
-            return NULL;
+            a->type_info->free(zero_val);
+            return memory_allocation_failed;
         }
-        poly_set_coef(const_poly, 0, GET_COEF_PTR(p, i));
+        poly_set_coef(const_poly, 0, GET_COEF_PTR(a, i));
 
-        Polynom *sum = add_poly(current, const_poly);
+        Polynom *sum = create_poly(a->type_info, current->degree, NULL);
+        if (!sum)
+        {
+            delete_poly(current);
+            delete_poly(const_poly);
+            a->type_info->free(zero_val);
+            return memory_allocation_failed;
+        }
+
+        err = add_poly(current, const_poly, sum);
         delete_poly(current);
         delete_poly(const_poly);
 
-        if (!sum)
+        if (err != ok)
         {
-            p->type_info->free(zero_coef);
-            delete_poly(res);
-            return NULL;
+            delete_poly(sum);
+            a->type_info->free(zero_val);
+            return err;
         }
         current = sum;
         i--;
     }
 
-    size_t k;
-    for (k = 0; k <= res->degree; k++)
+    for (k = 0; k <= result->degree; k++)
     {
         if (k <= current->degree)
-        {
-            p->type_info->copy(GET_COEF_PTR(res, k), GET_COEF_PTR(current, k));
-        }
+            a->type_info->copy(GET_COEF_PTR(result, k), GET_COEF_PTR(current, k));
         else
-        {
-            p->type_info->copy(GET_COEF_PTR(res, k), zero_coef);
-        }
+            a->type_info->copy(GET_COEF_PTR(result, k), zero_val);
     }
 
     delete_poly(current);
-    p->type_info->free(zero_coef);
+    a->type_info->free(zero_val);
 
-    return res;
+    return ok;
 }
 
 void poly_print(const Polynom *poly)

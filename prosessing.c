@@ -176,10 +176,17 @@ void sort_degrees(int *degrees, int count)
     }
 }
 
-Polynom *parse_polynomial(const char *str, const TypeInfo *type)
+Polynom *parse_polynomial(const char *str, const TypeInfo *type, PolyErrors *err)
 {
+    if (err)
+        *err = ok;
+
     if (!str || !type)
+    {
+        if (err)
+            *err = null_error;
         return NULL;
+    }
 
     int has_valid_term = 0;
     const char *check_ptr = str;
@@ -195,20 +202,27 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
 
     if (!has_valid_term)
     {
-        printf("В строке нет чисел или переменной x.\n");
+        if (err)
+            *err = poli_parse_errore;
         return NULL;
     }
 
     int max_deg = get_max_degree(str);
     if (max_deg < 0)
+    {
+        if (err)
+            *err = poli_parse_errore;
         return NULL;
+    }
 
-    Polynom *poly = create_poly(type, max_deg);
+    Polynom *poly = create_poly(type, (size_t)max_deg, err);
     if (!poly)
+    {
         return NULL;
+    }
 
     const char *ptr = str;
-    int terms_parsed = 0; 
+    int terms_parsed = 0;
 
     while (*ptr != '\0')
     {
@@ -242,7 +256,8 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
                 double int_part;
                 if (modf(coef_val, &int_part) != 0.0)
                 {
-                    printf("Введен тип double (%.4g) для типа int.\n", coef_val);
+                    if (err)
+                        *err = type_error;
                     delete_poly(poly);
                     return NULL;
                 }
@@ -258,26 +273,27 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
             ptr++;
 
         int degree = 0;
-        int has_variable = 0;
 
         if (*ptr == 'x' || *ptr == 'X')
         {
-            has_variable = 1;
             ptr++;
             while (*ptr == ' ')
                 ptr++;
+
             if (*ptr == '^')
             {
                 ptr++;
                 while (*ptr == ' ')
                     ptr++;
+
                 if (*ptr >= '0' && *ptr <= '9')
                 {
                     char *end;
                     long d = strtol(ptr, &end, 10);
                     if (d < 0 || d > 1000000)
                     {
-                        printf("Степень %ld слишком большая.\n", d);
+                        if (err)
+                            *err = degree_error; 
                         delete_poly(poly);
                         return NULL;
                     }
@@ -286,6 +302,8 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
                 }
                 else
                 {
+                    if (err)
+                        *err = poli_parse_errore; 
                     delete_poly(poly);
                     return NULL;
                 }
@@ -310,10 +328,27 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
         coef_val *= sign;
 
         void *temp = type->create();
+        if (!temp)
+        {
+            if (err)
+                *err = memory_allocation_failed;
+            delete_poly(poly);
+            return NULL;
+        }
+
         if (type->size == sizeof(int))
             *(int *)temp = (int)coef_val;
         else if (type->size == sizeof(double))
             *(double *)temp = coef_val;
+
+        if (degree > (int)poly->degree)
+        {
+            type->free(temp);
+            if (err)
+                *err = degree_error;
+            delete_poly(poly);
+            return NULL;
+        }
 
         poly_set_coef(poly, degree, temp);
         type->free(temp);
@@ -323,10 +358,13 @@ Polynom *parse_polynomial(const char *str, const TypeInfo *type)
 
     if (terms_parsed == 0)
     {
-        printf("Не удалось считать многочлен\n");
+        if (err)
+            *err = poli_parse_errore;
         delete_poly(poly);
         return NULL;
     }
 
+    if (err)
+        *err = ok;
     return poly;
 }
